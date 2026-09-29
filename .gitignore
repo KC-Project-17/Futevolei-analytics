@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Modelos, videos y resultados (pesados: quedan en Drive)
+*.pth
+*.onnx
+*.mp4
+*.avi
+*.mov
+*.parquet
+*.pkl
+*.pickle
+salida*/
+resultados/
+runs/
+
+# Credenciales
+.env
+*.secret

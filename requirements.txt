@@ -1,0 +1,8 @@
+ultralytics
+opencv-python
+numpy
+pandas
+scipy
+matplotlib
+pyarrow          # leer / escribir .parquet
+psycopg2-binary  # solo para guardar en PostgreSQL (futevolei_code/database.py)
