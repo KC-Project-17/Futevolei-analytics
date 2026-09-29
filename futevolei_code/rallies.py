@@ -12,7 +12,6 @@ NORMALIZADAS a 1080p (se escalan solas según la altura del video).
 import numpy as np
 import pandas as pd
 
-from .broadcast import replay_graphics_from_detections, replay_mask_from_graphics
 from .common import find_runs, meta_to_dict
 
 
@@ -124,8 +123,7 @@ def detect_rallies(
     debug=False,               # imprime cada candidato a contacto con la arena y por qué se aceptó/rechazó
     edge_margin=0.03,          # fracción del ancho/alto para decir "salió del cuadro"
     # Filtros y márgenes
-    replay_mask=None,          # frames de repetición (se ignoran). None = se detectan solos desde df_det
-    auto_replay=True,          # detectar repeticiones con la animación visible en las detecciones
+    replay_mask=None,          # frames de repetición (se ignoran). None = no se excluyen repeticiones
     closeup_h=0.40,            # jugador más alto > esto (fracción del alto) = primer plano, no es juego
     view_change_sec=0.3,       # tras un cambio primer plano <-> vista abierta, no se decide "ground"
     serve_rest_frac=0.25,      # fracción mínima de 1.5 s antes del saque con la pelota visible y quieta
@@ -191,9 +189,8 @@ def detect_rallies(
             (repuesto), no se acepta.
         debug (bool): imprime cada candidato a contacto con la arena y por qué se aceptó/rechazó.
         edge_margin (float): fracción del ancho/alto para decir "salió del cuadro".
-        replay_mask (np.ndarray | None): frames de repetición (se ignoran). None = se detectan
-            solos desde df_det.
-        auto_replay (bool): detectar repeticiones con la animación visible en las detecciones.
+        replay_mask (np.ndarray | None): frames de repetición (se ignoran), salida de
+            broadcast.replay_mask_from_graphics. None = no se excluyen repeticiones.
         closeup_h (float): jugador más alto > esto (fracción del alto) = primer plano, no es juego.
         view_change_sec (float): tras un cambio primer plano <-> vista abierta, no se decide "ground".
         serve_rest_frac (float): fracción mínima de 1.5 s antes del saque con la pelota visible y quieta.
@@ -259,9 +256,6 @@ def detect_rallies(
     vy = traj["vy"].to_numpy()
     sp = traj["speed"].to_numpy()
     valid = ~np.isnan(cy)
-    if replay_mask is None and auto_replay:
-        _ev = replay_graphics_from_detections(df_det, meta)
-        replay_mask = replay_mask_from_graphics(_ev, meta) if len(_ev) else None
     in_replay = np.zeros(n, dtype=bool) if replay_mask is None else np.asarray(replay_mask, dtype=bool)[:n]
     if in_replay.any():
         # La pelota de la repetición no existe para la segmentación

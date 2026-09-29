@@ -4,7 +4,6 @@ Elementos de la transmisión que no son juego.
 Repeticiones: la transmisión abre la repetición con una animación de la pelota gigante
 amarilla/negra que llena la pantalla.
     detect_replay_graphics            -> animaciones por color (recorre el video, sin modelo)
-    replay_graphics_from_detections   -> animaciones a partir de las detecciones (sin video)
     replay_mask_from_graphics         -> máscara de frames a ignorar
 
 Cambios de vista (opcional): recorta el final de la jugada cuando la transmisión pasa a
@@ -77,36 +76,6 @@ def detect_replay_graphics(video_path, step=2, thr=0.15, verbose=True):
     return ev
 
 
-def replay_graphics_from_detections(df_det, meta, h_frac=0.9, min_frames=20, merge_sec=0.5):
-    """
-    Sin recorrer el video: la animación de la pelota gigante aparece en las detecciones
-    como un "jugador" que ocupa casi toda la altura de la imagen durante ~0.7-1 s.
-
-    Args:
-        df_det (pd.DataFrame): detecciones.
-        meta (dict | pd.DataFrame): metadatos del video.
-        h_frac (float): altura relativa mínima de la caja.
-        min_frames (int): frames mínimos para aceptar un evento.
-        merge_sec (float): se unen frames separados por menos de esto.
-
-    Returns:
-        pd.DataFrame: start_frame, end_frame de cada evento.
-    """
-    meta = meta_to_dict(meta)
-    fps, H = meta["fps"], meta["height"]
-    p = df_det[df_det["type"] == "player"]
-    fr = np.sort(p.loc[(p["y2"] - p["y1"]) >= h_frac * H, "frame"].unique())
-    ev = []
-    for f in fr:
-        if ev and f - ev[-1][1] <= merge_sec * fps:
-            ev[-1][1] = f
-            ev[-1][2] += 1
-        else:
-            ev.append([f, f, 1])
-    ev = [e for e in ev if e[2] >= min_frames]
-    return pd.DataFrame([e[:2] for e in ev], columns=["start_frame", "end_frame"])
-
-
 def replay_mask_from_graphics(events, meta, pair_max_sec=20.0, default_sec=1.0,
                               merge_sec=1.0, anim_max_sec=1.5):
     """
@@ -117,8 +86,7 @@ def replay_mask_from_graphics(events, meta, pair_max_sec=20.0, default_sec=1.0,
       repetición; si está suelta, solo se marca la animación + default_sec.
     - Eventos más largos que anim_max_sec no son la animación (pausas, publicidad
       con mucho amarillo): se marcan completos como "no juego" y no se emparejan.
-    Sirve tanto para detect_replay_graphics (color, sin modelo) como para
-    replay_graphics_from_detections.
+    Recibe la salida de detect_replay_graphics.
 
     Args:
         events (pd.DataFrame): start_frame, end_frame de cada animación.
