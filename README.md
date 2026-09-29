@@ -33,7 +33,7 @@ hsv_h=0.0, hsv_s=0.0, hsv_v=0.0, erasing=0.0, mixup=0.0, copy_paste=0.0
 
 ### Seguimiento (tracking)
 
-Probamos trackers (ByteTrack y BoT-SORT) para seguir el balón y los jugadores. Con los jugadores la detección era correcta, pero el tracker no conservaba la identidad: tras cruces u oclusiones, un jugador recibía un ID nuevo o intercambiaba su ID con otro (*ID switches*). Como las estadísticas por jugador requieren una identidad estable, descartamos ese enfoque y las estadísticas se calculan por **equipo**.
+Probamos trackers (ByteTrack y BoT-SORT) para seguir el balón y los jugadores. Con los jugadores la detección era correcta, pero el tracker no conservaba la identidad: tras cruces u oclusiones, un jugador recibía un ID nuevo o intercambiaba su ID con otro. Como las estadísticas por jugador requieren una identidad estable, descartamos ese enfoque y las estadísticas se calculan por **equipo**.
 
 Con el balón, los trackers perdían más detecciones que nuestro propio seguimiento (cobertura de la pelota de 85% a 70% y 65%), así que usamos un seguimiento propio de una sola pelota: en cada frame se elige la detección más cercana a la posición anterior (descartando saltos imposibles), se interpolan huecos cortos y se suaviza la trayectoria para obtener velocidades.
 
@@ -44,7 +44,7 @@ Para llevar posiciones de la imagen a coordenadas reales de la cancha calculamos
 La solución:
 
 1. Se recorren los frames hasta encontrar el primero con 4 o más keypoints; este sirve de referencia.
-2. En los frames con solo 3 keypoints, se estima el 4º a partir de la última homografía válida (movimiento rígido de la cámara), dentro de la mitad de la cancha que se está viendo, y se valida que el cuadrilátero resultante sea geométricamente plausible.
+2. En los frames con solo 3 keypoints, se estima el 4º a partir de la última homografía válida, dentro de la mitad de la cancha que se está viendo, y se valida que el cuadrilátero resultante sea geométricamente plausible.
 3. Los frames anteriores al primer frame de referencia se procesan en un segundo recorrido hacia atrás.
 
 Como la cámara gira siguiendo la pelota, además se mide el paneo de la cámara entre frames. Con él se estabilizan las homografías y se ubica la red en cada frame, aunque no se vea.
